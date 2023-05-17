@@ -1,27 +1,31 @@
-Small IMDb
+<h1 align="center">SIMDb</h1>
+<p align="center">A minimal set IMDb tool using C++</p>
+<p align="center">Searches require a '+' in-between keywords</p>
 
-![imdb logo banner](./assets/banner.png)
+## Features
+- Search for movies and actors/actresses
+- View movies an actor or actress has appeared in
 
-How to build:
+## Example
+
+![SIMDb Example Video](./assets/SIMDb-Example.gif)
+
+## Building
+- This project uses C++23, make sure your compiler supports it
+```shell
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=release -G "Ninja" .. && ninja
+cmake -DCMAKE_BUILD_TYPE=release -G "Ninja" -DCMAKE_CXX_COMPILER_LAUNCHER=ccache .. && ninja
+```
 
-If you need to clean up the files:
+- To clean up the executable, use the below command in your terminal
+```shell
 cmake --build ./build --target clean
+```
 
-Setup clangd:
-run build step first!
-cd build (unless already in build folder)
+- To setup clangd with this project
+	1. Run the build step first!
+	2. cd build (unless already in build folder)
+	3. Run the following command
+```shell
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "Ninja" ..
-
-Searches require a '+' inbetween keywords
-
-Tests:
-Search for movies -> God+Father+II
-Output: (index number, title, year, genres)
-Verify it's correct!
-
-Search for actors -> scarlett+johan
-Output: (index number, name, birth year - death year, roles)
-
-Setup with Docker and Catch2 (if necessary)
+```
