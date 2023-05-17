@@ -16,7 +16,7 @@ namespace Imdb {
     };
     // clang-format on
 
-    template <RecordType T> std::string getPrimary(const T &rc) {
+    template <RecordType T> constexpr std::string getPrimary(const T &rc) {
         if constexpr (std::is_same_v<T, NameRecord>) {
             return rc._primaryName;
         } else {
@@ -65,6 +65,7 @@ namespace Imdb {
 
         for (size_t pos = 0; pos < actors.size(); pos++) {
             auto &actor = actors[pos];
+            
             std::cout << std::format("{}:\n{}\n", pos, actor._primaryName);
             std::ranges::copy(actor._primaryProfession, std::ostream_iterator<std::string>(std::cout, ", "));
             std::cout << std::endl;
