@@ -1,31 +1,48 @@
 #include "movie.hpp"
 #include <algorithm>
+#include <concepts>
 #include <format>
 
 namespace Imdb {
-    [[nodiscard]] constexpr std::vector<TitleRecord> Movie::search(std::string_view in, const Records &rc) {
+    // clang-format off
+    template <class T>
+    concept RecordType = std::is_same_v<T, NameRecord>      || 
+                         std::is_same_v<T, PrincipalRecord> || 
+                         std::is_same_v<T, TitleRecord>;
+
+    template <class T>
+    concept ContainerType = requires(T type) { 
+        requires std::same_as<T, std::vector<typename T::value_type>>; 
+    };
+    // clang-format on
+
+    template <RecordType T> std::string getPrimary(const T &rc) {
+        if constexpr (std::is_same_v<T, NameRecord>) {
+            return rc._primaryName;
+        } else {
+            return rc._primaryTitle;
+        }
+    }
+
+    template <RecordType T, ContainerType U>
+    constexpr std::vector<T> filterSearch(std::string_view in, const U &container) {
         std::vector<std::string_view> splittedIn = utils::split(in, '+');
 
-        return rc._titles | std::views::filter([&](const auto &trc) {
-                   auto titleCpy =
-                       trc._primaryTitle | std::views::transform(::tolower) | std::ranges::to<std::string>();
+        return container | std::views::filter([&](const auto &rc) {
+                   auto strCpy = getPrimary(rc) | std::views::transform(::tolower) | std::ranges::to<std::string>();
                    return std::ranges::all_of(splittedIn, [&](const auto &s) {
-                       return titleCpy.find(s, 0) != std::string::npos;
+                       return strCpy.find(s, 0) != std::string::npos;
                    });
                }) |
                std::ranges::to<std::vector>();
     }
 
-    [[nodiscard]] constexpr std::vector<NameRecord> Movie::searchForActors(std::string_view in, const Records &rc) {
-        std::vector<std::string_view> splittedIn = utils::split(in, '+');
+    [[nodiscard]] constexpr std::vector<TitleRecord> Movie::search(std::string_view in, const Records &rc) {
+        return filterSearch<TitleRecord>(in, rc._titles);
+    }
 
-        return rc._names | std::views::filter([&](const auto &nrc) {
-                   auto nameCpy = nrc._primaryName | std::views::transform(::tolower) | std::ranges::to<std::string>();
-                   return std::ranges::all_of(splittedIn, [&](const auto &s) {
-                       return nameCpy.find(s, 0) != std::string::npos;
-                   });
-               }) |
-               std::ranges::to<std::vector>();
+    [[nodiscard]] constexpr std::vector<NameRecord> Movie::searchForActors(std::string_view in, const Records &rc) {
+        return filterSearch<NameRecord>(in, rc._names);
     }
 
     constexpr void Movie::displayMovies(const std::vector<TitleRecord> &movies) {

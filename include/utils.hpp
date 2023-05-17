@@ -8,11 +8,11 @@
 #include <vector>
 
 namespace Imdb::utils {
-    template <typename T>
-    concept String = std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>;
+    template <class T>
+    concept StringType = std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>;
 
     // const& is redundant for string_view but not for string.
-    template <String T> [[nodiscard]] inline constexpr std::vector<T> split(const T &line, char delim) {
+    template <StringType T> [[nodiscard]] inline constexpr std::vector<T> split(const T &line, char delim) {
         return line | std::views::split(delim) | std::views::transform([](auto &&s) {
                    return T(s.begin(), s.end());
                }) |
