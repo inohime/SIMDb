@@ -1,0 +1,1 @@
+clang++ -std=c++2b -Wall -Wextra -pedantic-errors -O2 -I./include/ ./src/main.cpp ./src/records.cpp ./src/menu.cpp ./src/movie.cpp -o build/imdb
