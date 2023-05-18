@@ -18,9 +18,9 @@ namespace Imdb {
 
     template <RecordType T> constexpr std::string getPrimary(const T &rc) {
         if constexpr (std::is_same_v<T, NameRecord>) {
-            return rc._primaryName;
+            return rc.primaryName;
         } else {
-            return rc._primaryTitle;
+            return rc.primaryTitle;
         }
     }
 
@@ -38,11 +38,11 @@ namespace Imdb {
     }
 
     [[nodiscard]] constexpr std::vector<TitleRecord> Movie::search(std::string_view in, const Records &rc) {
-        return filterSearch<TitleRecord>(in, rc._titles);
+        return filterSearch<TitleRecord>(in, rc.titles);
     }
 
     [[nodiscard]] constexpr std::vector<NameRecord> Movie::searchForActors(std::string_view in, const Records &rc) {
-        return filterSearch<NameRecord>(in, rc._names);
+        return filterSearch<NameRecord>(in, rc.names);
     }
 
     constexpr void Movie::displayMovies(const std::vector<TitleRecord> &movies) {
@@ -53,8 +53,8 @@ namespace Imdb {
         for (size_t pos = 0; pos < movies.size(); pos++) {
             auto &movie = movies[pos];
 
-            std::cout << std::format("{}:\nTitle: {}\nYear: {}\nGenre: ", pos, movie._primaryTitle, movie._startYear);
-            std::ranges::copy(movie._genres, std::ostream_iterator<std::string>(std::cout, " "));
+            std::cout << std::format("{}:\nTitle: {}\nYear: {}\nGenre: ", pos, movie.primaryTitle, movie.startYear);
+            std::ranges::copy(movie.genres, std::ostream_iterator<std::string>(std::cout, " "));
             std::cout << std::endl;
             std::cout << std::format("---------------\n");
         }
@@ -66,29 +66,29 @@ namespace Imdb {
         for (size_t pos = 0; pos < actors.size(); pos++) {
             auto &actor = actors[pos];
             
-            std::cout << std::format("{}:\n{}\n", pos, actor._primaryName);
-            std::ranges::copy(actor._primaryProfession, std::ostream_iterator<std::string>(std::cout, ", "));
+            std::cout << std::format("{}:\n{}\n", pos, actor.primaryName);
+            std::ranges::copy(actor.primaryProfession, std::ostream_iterator<std::string>(std::cout, ", "));
             std::cout << std::endl;
-            std::cout << std::format("({}-{})\n", actor._birthYear, actor._deathYear);
+            std::cout << std::format("({}-{})\n", actor.birthYear, actor.deathYear);
             std::cout << std::format("---------------\n");
         }
     }
 
     constexpr void Movie::displayCast(std::string_view selectedMovie, Records &rc) {
-        auto precs = rc._principals | std::views::filter([&](const auto &prc) {
-                         return prc._titleID == selectedMovie && prc._character != "\\N";
+        auto precs = rc.principals | std::views::filter([&](const auto &prc) {
+                         return prc.titleID == selectedMovie && prc.character != "\\N";
                      }) |
                      std::ranges::to<std::vector>();
 
         auto nrecs = precs | std::views::transform([&](const auto &prc) {
-                         return rc._names | std::views::filter([&](const auto &nrc) {
-                                    return nrc._nameID == prc._nameID;
+                         return rc.names | std::views::filter([&](const auto &nrc) {
+                                    return nrc.nameID == prc.nameID;
                                 });
                      }) |
                      std::views::join | std::ranges::to<std::vector>();
 
         for (size_t i = 0; i < precs.size(); i++) {
-            std::cout << std::format("{} {}\n", nrecs[i]._primaryName, precs[i]._character);
+            std::cout << std::format("{} {}\n", nrecs[i].primaryName, precs[i].character);
         }
 
         std::cout << std::endl;
@@ -96,28 +96,28 @@ namespace Imdb {
 
     constexpr void Movie::displayActorsTitles(std::string_view selectedActor, Records &rc) {
         // pick the only actor that matches the selected
-        const auto &nrec = *(rc._names | std::views::filter([&](const auto &nrc) {
-                                 return nrc._nameID == selectedActor;
+        const auto &nrec = *(rc.names | std::views::filter([&](const auto &nrc) {
+                                 return nrc.nameID == selectedActor;
                              }) |
                              std::views::take(1))
                                 .begin();
 
         // get all of the characters this actor has played
-        auto precs = rc._principals | std::views::filter([&](const auto &prc) {
-                         return prc._nameID == nrec._nameID;
+        auto precs = rc.principals | std::views::filter([&](const auto &prc) {
+                         return prc.nameID == nrec.nameID;
                      }) |
                      std::ranges::to<std::vector>();
 
         // get all of the titles this actor has partcipated in
         auto trecs = precs | std::views::transform([&](const auto &prc) {
-                         return rc._titles | std::views::filter([&](const auto &trc) {
-                                    return trc._titleID == prc._titleID;
+                         return rc.titles | std::views::filter([&](const auto &trc) {
+                                    return trc.titleID == prc.titleID;
                                 });
                      }) |
                      std::views::join | std::ranges::to<std::vector>();
 
         for (size_t i = 0; i < precs.size(); i++) {
-            std::cout << std::format("{} {} {}\n", trecs[i]._primaryTitle, trecs[i]._startYear, precs[i]._character);
+            std::cout << std::format("{} {} {}\n", trecs[i].primaryTitle, trecs[i].startYear, precs[i].character);
         }
     }
 } // namespace Imdb
@@ -125,10 +125,10 @@ namespace Imdb {
 namespace Imdb::Searcher {
     void movieSearch(OpMovie opMovie, OpRecords opRecs) {
         if (auto movie = *opMovie; auto recs = *opRecs) {
-            if (!recs->_isSearchOk) {
-                std::unique_lock lock(recs->_mut);
-                recs->_searchCondition.wait(lock, [&] {
-                    return recs->_isSearchOk;
+            if (!recs->isSearchOk) {
+                std::unique_lock lock(recs->mut);
+                recs->searchCondition.wait(lock, [&] {
+                    return recs->isSearchOk;
                 });
             }
 
@@ -160,7 +160,7 @@ namespace Imdb::Searcher {
                     std::cout << "Invalid option!\n";
                     return;
                 }
-                movie->displayCast(movies[movieChoice]._titleID, std::ref(*recs));
+                movie->displayCast(movies[movieChoice].titleID, std::ref(*recs));
             } else {
                 std::cout << "Malinformed input\n";
                 return;
@@ -170,10 +170,10 @@ namespace Imdb::Searcher {
 
     void actorSearch(OpMovie opMovie, OpRecords opRecs) {
         if (auto movie = *opMovie; auto recs = *opRecs) {
-            if (!recs->_isSearchOk) {
-                std::unique_lock lock(recs->_mut);
-                recs->_searchCondition.wait(lock, [&] {
-                    return recs->_isSearchOk;
+            if (!recs->isSearchOk) {
+                std::unique_lock lock(recs->mut);
+                recs->searchCondition.wait(lock, [&] {
+                    return recs->isSearchOk;
                 });
             }
 
@@ -210,7 +210,7 @@ namespace Imdb::Searcher {
                         std::cout << "Invalid option!\n";
                         return;
                     }
-                    movie->displayActorsTitles(actors[actorChoice]._nameID, std::ref(*recs));
+                    movie->displayActorsTitles(actors[actorChoice].nameID, std::ref(*recs));
                 } else {
                     std::cout << "Malinformed input\n";
                     return;
