@@ -8,9 +8,9 @@
 
 namespace Imdb {
     struct MenuItem {
-        std::string _title;
-        std::function<void(OpMovie, OpRecords)> _callbackFn;
-        OpArgs _fnArgs;
+        std::string title;
+        std::function<void(OpMovie, OpRecords)> callbackFn;
+        OpArgs fnArgs;
     };
 
     class Menu {

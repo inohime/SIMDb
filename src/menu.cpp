@@ -24,7 +24,7 @@ namespace Imdb {
         std::cout << _menuTitle << '\n';
 
         for (const auto &[itemIdx, item] : _items) {
-            std::cout << std::format("  {}. {}\n", itemIdx, item._title);
+            std::cout << std::format("  {}. {}\n", itemIdx, item.title);
         }
 
         std::cout << "Your choice: ";
@@ -37,8 +37,8 @@ namespace Imdb {
                 return display();
             }
 
-            auto &[mvArg, rcArg] = *_items[in]._fnArgs;
-            _items[in]._callbackFn(mvArg, rcArg);
+            auto &[mvArg, rcArg] = *_items[in].fnArgs;
+            _items[in].callbackFn(mvArg, rcArg);
         } else {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
