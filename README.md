@@ -11,7 +11,7 @@
 ![SIMDb Example Video](./assets/SIMDb-Example.gif)
 
 ## Building
-- This project uses C++23, make sure your compiler supports it
+- This project uses C++20, make sure your compiler supports it
 ```shell
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=release -G "Ninja" -DCMAKE_CXX_COMPILER_LAUNCHER=ccache .. && ninja
