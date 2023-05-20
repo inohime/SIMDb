@@ -13,12 +13,15 @@
 ## Building
 - This project uses C++20, make sure your compiler supports it
 ```shell
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=release -G "Ninja" -DCMAKE_CXX_COMPILER_LAUNCHER=ccache .. && ninja
+# in root directory
+cmake -B ./build -DCMAKE_BUILD_TYPE=release -G "Ninja"
+# in build directory
+cd build && cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache .. && ninja
 ```
 
 - To clean up the executable, use the below command in your terminal
 ```shell
+# in root directory
 cmake --build ./build --target clean
 ```
 
@@ -27,5 +30,6 @@ cmake --build ./build --target clean
 	2. cd build (unless already in build folder)
 	3. Run the following command
 ```shell
+# in build directory
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -G "Ninja" ..
 ```
