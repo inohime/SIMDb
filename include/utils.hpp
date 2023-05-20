@@ -6,6 +6,7 @@
 #include <ranges>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace Imdb::utils {
     template <class T>
@@ -13,17 +14,17 @@ namespace Imdb::utils {
 
     // const& is redundant for string_view but not for string.
     template <StringType T> [[nodiscard]] inline constexpr std::vector<T> split(const T &line, char delim) {
-        return line | std::views::split(delim) | std::views::transform([](auto &&s) {
+        auto splitIn = line | std::views::split(delim) | std::views::transform([](auto &&s) {
                    return T(s.begin(), s.end());
-               }) |
-               std::ranges::to<std::vector>();
+               });
+
+        return std::vector<T>(splitIn.begin(), splitIn.end());
     }
 
     inline constexpr void toLowercase(std::string &in) {
-        in = in | std::views::transform([](uint8_t x) {
-                 return std::tolower(x);
-             }) |
-             std::ranges::to<std::string>();
+        for (auto &c : in) {
+            c = std::tolower(static_cast<uint8_t>(c));
+        }
     }
 
     class Reader {

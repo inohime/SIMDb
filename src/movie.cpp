@@ -28,13 +28,17 @@ namespace Imdb {
     constexpr std::vector<T> filterSearch(std::string_view in, const U &container) {
         std::vector<std::string_view> splittedIn = utils::split(in, '+');
 
-        return container | std::views::filter([&](const auto &rc) {
-                   auto strCpy = getPrimary(rc) | std::views::transform(::tolower) | std::ranges::to<std::string>();
-                   return std::ranges::all_of(splittedIn, [&](const auto &s) {
-                       return strCpy.find(s, 0) != std::string::npos;
-                   });
-               }) |
-               std::ranges::to<std::vector>();
+        auto filterView = container | std::views::filter([&](const auto &rc) {
+                              auto strView = getPrimary(rc) | std::views::transform(::tolower) | std::views::common;
+                              auto strCpy = std::string(strView.begin(), strView.end());
+                              
+                              return std::ranges::all_of(splittedIn, [&](const auto &s) {
+                                  return strCpy.find(s, 0) != std::string::npos;
+                              });
+                          }) |
+                          std::views::common;
+
+        return std::vector<T>(filterView.begin(), filterView.end());
     }
 
     [[nodiscard]] constexpr std::vector<TitleRecord> Movie::search(std::string_view in, const Records &rc) {
@@ -65,7 +69,7 @@ namespace Imdb {
 
         for (size_t pos = 0; pos < actors.size(); pos++) {
             auto &actor = actors[pos];
-            
+
             std::cout << std::format("{}:\n{}\n", pos, actor.primaryName);
             std::ranges::copy(actor.primaryProfession, std::ostream_iterator<std::string>(std::cout, ", "));
             std::cout << std::endl;
@@ -75,17 +79,18 @@ namespace Imdb {
     }
 
     constexpr void Movie::displayCast(std::string_view selectedMovie, Records &rc) {
-        auto precs = rc.principals | std::views::filter([&](const auto &prc) {
-                         return prc.titleID == selectedMovie && prc.character != "\\N";
-                     }) |
-                     std::ranges::to<std::vector>();
+        auto prcView = rc.principals | std::views::filter([&](const auto &prc) {
+                           return prc.titleID == selectedMovie && prc.character != "\\N";
+                       });
+        std::vector<PrincipalRecord> precs(prcView.begin(), prcView.end());
 
-        auto nrecs = precs | std::views::transform([&](const auto &prc) {
-                         return rc.names | std::views::filter([&](const auto &nrc) {
-                                    return nrc.nameID == prc.nameID;
-                                });
-                     }) |
-                     std::views::join | std::ranges::to<std::vector>();
+        auto nrcView = precs | std::views::transform([&](const auto &prc) {
+                           return rc.names | std::views::filter([&](const auto &nrc) {
+                                      return nrc.nameID == prc.nameID;
+                                  });
+                       }) |
+                       std::views::join | std::views::common;
+        std::vector<NameRecord> nrecs(nrcView.begin(), nrcView.end());
 
         for (size_t i = 0; i < precs.size(); i++) {
             std::cout << std::format("{} {}\n", nrecs[i].primaryName, precs[i].character);
@@ -103,18 +108,19 @@ namespace Imdb {
                                 .begin();
 
         // get all of the characters this actor has played
-        auto precs = rc.principals | std::views::filter([&](const auto &prc) {
-                         return prc.nameID == nrec.nameID;
-                     }) |
-                     std::ranges::to<std::vector>();
+        auto prcView = rc.principals | std::views::filter([&](const auto &prc) {
+                           return prc.nameID == nrec.nameID;
+                       });
+        std::vector<PrincipalRecord> precs(prcView.begin(), prcView.end());
 
         // get all of the titles this actor has partcipated in
-        auto trecs = precs | std::views::transform([&](const auto &prc) {
-                         return rc.titles | std::views::filter([&](const auto &trc) {
-                                    return trc.titleID == prc.titleID;
-                                });
-                     }) |
-                     std::views::join | std::ranges::to<std::vector>();
+        auto trcView = precs | std::views::transform([&](const auto &prc) {
+                           return rc.titles | std::views::filter([&](const auto &trc) {
+                                      return trc.titleID == prc.titleID;
+                                  });
+                       }) |
+                       std::views::join | std::views::common;
+        std::vector<TitleRecord> trecs(trcView.begin(), trcView.end());
 
         for (size_t i = 0; i < precs.size(); i++) {
             std::cout << std::format("{} {} {}\n", trecs[i].primaryTitle, trecs[i].startYear, precs[i].character);

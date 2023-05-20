@@ -1,5 +1,6 @@
 #include "movie.hpp"
 #include "menu.hpp"
+#include <thread>
 
 int main() {
     Imdb::Records recs;
