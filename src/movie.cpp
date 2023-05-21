@@ -78,7 +78,7 @@ namespace Imdb {
         }
     }
 
-    constexpr void Movie::displayCast(std::string_view selectedMovie, Records &rc) {
+    constexpr void Movie::displayCast(std::string_view selectedMovie, const Records &rc) {
         auto prcView = rc.principals | std::views::filter([&](const auto &prc) {
                            return prc.titleID == selectedMovie && prc.character != "\\N";
                        });
@@ -99,7 +99,7 @@ namespace Imdb {
         std::cout << std::endl;
     }
 
-    constexpr void Movie::displayActorsTitles(std::string_view selectedActor, Records &rc) {
+    constexpr void Movie::displayActorsTitles(std::string_view selectedActor, const Records &rc) {
         // pick the only actor that matches the selected
         const auto &nrec = *(rc.names | std::views::filter([&](const auto &nrc) {
                                  return nrc.nameID == selectedActor;
